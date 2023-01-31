@@ -86,12 +86,29 @@ def get_reklama_post(session):
 
 def get_sort_groups(session):
     # Загружаем базы данных с отсеянными прошлые разы группами
-    with open(os.path.join('rpg_black_ids.json'), 'r', encoding='utf-8') as f:
-        session['rpg_black_ids'] = json.load(f)
-    with open(os.path.join('false_groups_id.txt'), 'r', encoding='utf-8') as f:
-        session['false_groups_id'] = json.load(f)
-    with open(os.path.join('true_groups_id.txt'), 'r', encoding='utf-8') as f:
-        session['true_groups_id'] = json.load(f)
+    try:
+        with open(os.path.join('rpg_black_ids.json'), 'r', encoding='utf-8') as f:
+            session['rpg_black_ids'] = json.load(f)
+    except:
+        session['rpg_black_ids'] = [0]
+        with open(os.path.join('rpg_black_ids.json'), 'w', encoding='utf-8') as f:
+            f.write(json.dumps(session['rpg_black_ids'], indent=2, ensure_ascii=False))
+
+    try:
+        with open(os.path.join('false_groups_id.json'), 'r', encoding='utf-8') as f:
+            session['false_groups_id'] = json.load(f)
+    except:
+        session['false_groups_id'] = [0]
+        with open(os.path.join('false_groups_id.json'), 'w', encoding='utf-8') as f:
+            f.write(json.dumps(session['false_groups_id'], indent=2, ensure_ascii=False))
+
+    try:
+        with open(os.path.join('true_groups_id.json'), 'r', encoding='utf-8') as f:
+            session['true_groups_id'] = json.load(f)
+    except:
+        session['true_groups_id'] = [-28534711]
+        with open(os.path.join('true_groups_id.json'), 'w', encoding='utf-8') as f:
+            f.write(json.dumps(session['true_groups_id'], indent=2, ensure_ascii=False))
 
     session['true_groups_id'].append(-28534711)  # Для страховки от пустого списка
     session['false_groups_id'].append(0)  # Для страховки от пустого списка
