@@ -1,0 +1,7 @@
+/venv/
+/.idea/
+/vk_config.v2.json
+/.pytest_cache/
+/config.py
+/.editorconfig
+/test.py
