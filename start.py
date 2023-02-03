@@ -1,6 +1,7 @@
 import json
 import os
 import random
+import re
 import time
 from datetime import datetime
 from random import shuffle
@@ -21,11 +22,10 @@ def save_result(session):
             <body>
             <h2>Список ключевых слов поиска и количество найденных по ним групп:</h2>
             <p>{session['rpg_words']}</p>
-            <p>Всего найдено по словам - {session['all_found_groups_from_words']} групп.</p>
-            <p>Всего найдено реально - {session['all_found_groups']} групп.</p>
-            <p>Обработал {session['count_up'] + session['count_down']} групп</p>
+            <p>Всего найдено - {session['all_found_groups']} групп подходящих под Ваш запрос.</p>
+            <p>Обработано {session['count_up'] + session['count_down']} групп</p>
             <p>Успешно размещено {session['count_up']} объявлений для {session['count_all_members']} подписчиков.</p>
-            <p>Пропущено по тем или иным причинам {session['count_down']} групп.</p>
+            <p>{session['count_down']} групп отсеяно за негодностью.</p>
             <p></p>
             <h2>Список ссылок на группы в которые удалось разместить объявление:</h2>
             <p></p>
@@ -79,45 +79,43 @@ def get_sort_groups(session):
     # Загружаем базы данных с отсеянными прошлые разы группами.
     # Загружаем ОБЩИЙ ЧЕРНЫЙ список
     try:
-        with open(os.path.join("false_groups_id.json"), 'r', encoding='utf-8') as f:
+        with open(os.path.join("base/false_groups_id.json"), 'r', encoding='utf-8') as f:
             session['false_groups_id'] = json.load(f)
     except:
         session['false_groups_id'] = [0]
-        with open(os.path.join("false_groups_id.json"), 'w', encoding='utf-8') as f:
+        with open(os.path.join("base/false_groups_id.json"), 'w', encoding='utf-8') as f:
             f.write(json.dumps(session['false_groups_id'], indent=2, ensure_ascii=False))
 
-    # Загружаем ЧЕРНЫЙ список по настройкам (ключевые слова поиска и ограничения количества подписчиков в группах)
+    # Загружаем БАЗУ РЕГИОНАЛЬНУЮ по настройкам (ключевые слова поиска и ограничения количества подписчиков в группах)
     try:
-        with open(os.path.join(session['name_file_false_groups_id_by_count_members']), 'r', encoding='utf-8') as f:
-            session['false_groups_id_by_count_members'] = json.load(f)
+        with open(os.path.join(session['name_file_region_base']), 'r', encoding='utf-8') as f:
+            session['region_base'] = json.load(f)
     except:
-        session['false_groups_id_by_count_members'] = [0]
-        with open(os.path.join(session['name_file_false_groups_id_by_count_members']), 'w', encoding='utf-8') as f:
-            f.write(json.dumps(session['false_groups_id_by_count_members'], indent=2, ensure_ascii=False))
+        session['region_base'] = {"false_groups_id_by_count_members": [0], "true_groups_id": [28534711],
+                                  "rpg_words": session['rpg_words']}
+        with open(os.path.join(session['name_file_region_base']), 'w', encoding='utf-8') as f:
+            f.write(json.dumps(session['region_base'], indent=2, ensure_ascii=False))
 
-    # Загружаем БЕЛЫЙ список по настройкам (ключевые слова поиска и ограничения количества подписчиков в группах)
-    try:
-        with open(os.path.join(session['name_file_true_groups_id_by_count_members']), 'r', encoding='utf-8') as f:
-            session['true_groups_id'] = json.load(f)
-    except:
-        session['true_groups_id'] = [28534711]
-        with open(os.path.join(session['name_file_true_groups_id_by_count_members']), 'w', encoding='utf-8') as f:
-            f.write(json.dumps(session['true_groups_id'], indent=2, ensure_ascii=False))
-
-    session['true_groups_id'].append(28534711)  # Для страховки от пустого списка
+    session['region_base']['true_groups_id'].append(28534711)  # Для страховки от пустого списка
     session['false_groups_id'].append(0)  # Для страховки от пустого списка
     session['rpg_black_ids'].append(0)  # Для страховки от пустого списка
 
     session['false_groups_id'].extend(session['rpg_black_ids'])
-    session['false_groups_id'].extend(session['false_groups_id_by_count_members'])
-    session['true_groups_id'] = list(
-        set(session['true_groups_id']).difference(set(session['false_groups_id'])))
-    shuffle(session['true_groups_id'])
+    session['false_groups_id'].extend(session['region_base']['false_groups_id_by_count_members'])
+    session['region_base']['true_groups_id'] = list(
+        set(session['region_base']['true_groups_id']).difference(set(session['false_groups_id'])))
+    shuffle(session['region_base']['true_groups_id'])
+
+    for value in session['region_base']['rpg_words'].values():
+        session['all_found_groups_from_words'] += value
+
+    session['all_found_groups'] = len(session['region_base']['true_groups_id'])
+
     return session
 
 
 def post_in_sort_groups(session):
-    for true_group_id in session['true_groups_id']:
+    for true_group_id in session['region_base']['true_groups_id']:
 
         session = checking_token_limit(session)
         if not session:
@@ -153,7 +151,7 @@ def post_in_sort_groups(session):
             session['shut_token'].append(int(round(curr_dt.timestamp())))
             if len(session['shut_token']) > 100:
                 del session['shut_token'][0]
-            with open(os.path.join(f"{session['tokens'][0][0]}_shut_token.json"), 'w', encoding='utf-8') as f:
+            with open(os.path.join(f"base/{session['tokens'][0][0]}_shut_token.json"), 'w', encoding='utf-8') as f:
                 f.write(json.dumps(session['shut_token'], indent=2, ensure_ascii=False))
 
             save_result(session)
@@ -172,7 +170,7 @@ def post_in_sort_groups(session):
                 return
             session['count_down'] += 1
             session['false_groups_id'].append(true_group_id)
-            with open(os.path.join("false_groups_id.json"), 'w', encoding='utf-8') as f:
+            with open(os.path.join("base/false_groups_id.json"), 'w', encoding='utf-8') as f:
                 f.write(json.dumps(session['false_groups_id'], indent=2, ensure_ascii=False))
             time.sleep(5)
 
@@ -182,15 +180,14 @@ def post_in_sort_groups(session):
 def search_new_group(session):
     # Поиск новых групп по ключевым словам региона, если еще остались попытки постов до лимита
     session['list_groups'] = []
-    for key in session['rpg_words'].keys():
+    for key in session['region_base']['rpg_words'].keys():
         new_groups = session['tools'].get_all(method='groups.search', max_count=1000, limit=session['group_count_max'],
                                               values={'q': key, 'type': 'group'})['items']
 
-        session['rpg_words'][key] = len(new_groups)
+        session['region_base']['rpg_words'][key] = len(new_groups)
         session['list_groups'].extend(new_groups)
 
-    session['all_found_groups_from_words'] = 0
-    for value in session['rpg_words'].values():
+    for value in session['region_base']['rpg_words'].values():
         session['all_found_groups_from_words'] += value
 
     session['list_groups'] = [dict(t) for t in {tuple(d.items()) for d in session['list_groups']}]
@@ -218,7 +215,7 @@ def post_in_new_groups(session):
             session['count_down'] += 1
             continue
 
-        if group['id'] in session['true_groups_id']:
+        if group['id'] in session['region_base']['true_groups_id']:
             continue
 
         if 'can_post' in group and group['can_post'] == 0:
@@ -242,10 +239,12 @@ def post_in_new_groups(session):
 
         try:
             members = session['vk_app'].groups.getMembers(group_id=group['id'])
-            if members['count'] > session['count_members_maximum'] or members['count'] < session['count_members_minimum']:
-                session['false_groups_id_by_count_members'].append(group['id'])
-                with open(os.path.join(session['name_file_false_groups_id_by_count_members']), 'w', encoding='utf-8') as f:
-                    f.write(json.dumps(session['false_groups_id_by_count_members'], indent=2, ensure_ascii=False))
+            if members['count'] > session['count_members_maximum'] or members['count'] < session[
+                'count_members_minimum']:
+                session['region_base']['false_groups_id_by_count_members'].append(group['id'])
+                with open(os.path.join(session['name_file_region_base']), 'w',
+                          encoding='utf-8') as f:
+                    f.write(json.dumps(session['region_base'], indent=2, ensure_ascii=False))
                 session['count_down'] += 1
                 continue
         except Exception as ext:
@@ -255,7 +254,7 @@ def post_in_new_groups(session):
             continue
 
         # Сохраняем все неудачные попытки, так как их больше может не быть
-        with open(os.path.join("false_groups_id.json"), 'w', encoding='utf-8') as f:
+        with open(os.path.join("base/false_groups_id.json"), 'w', encoding='utf-8') as f:
             f.write(json.dumps(session['false_groups_id'], indent=2, ensure_ascii=False))
 
         try:
@@ -271,19 +270,20 @@ def post_in_new_groups(session):
                 f"""<a href="https://vk.com/{group['screen_name']}">https://vk.com/{group['screen_name']} - {members['count']} подписчиков</a><br />"""
             print(
                 f"{group['screen_name']} - {members['count']} подписчиков. Всего - {session['count_all_members']}")
-            session['true_groups_id'].append(group['id'])
+
+            session['region_base']['true_groups_id'].append(group['id'])
+            with open(os.path.join(session['name_file_region_base']), 'w',
+                      encoding='utf-8') as f:
+                f.write(json.dumps(session['region_base'], indent=2, ensure_ascii=False))
+
             session['count_up'] += 1
 
             curr_dt = datetime.now()
             session['shut_token'].append(int(round(curr_dt.timestamp())))
             if len(session['shut_token']) > 100:
                 del session['shut_token'][0]
-            with open(os.path.join(f"{session['tokens'][0][0]}_shut_token.json"), 'w', encoding='utf-8') as f:
+            with open(os.path.join(f"base/{session['tokens'][0][0]}_shut_token.json"), 'w', encoding='utf-8') as f:
                 f.write(json.dumps(session['shut_token'], indent=2, ensure_ascii=False))
-
-            with open(os.path.join(session['name_file_true_groups_id_by_count_members']), 'w',
-                      encoding='utf-8') as f:
-                f.write(json.dumps(session['true_groups_id'], indent=2, ensure_ascii=False))
 
             save_result(session)
 
@@ -303,7 +303,7 @@ def post_in_new_groups(session):
                 return
 
             session['false_groups_id'].append(group['id'])
-            with open(os.path.join("false_groups_id.json"), 'w', encoding='utf-8') as f:
+            with open(os.path.join("base/false_groups_id.json"), 'w', encoding='utf-8') as f:
                 f.write(json.dumps(session['false_groups_id'], indent=2, ensure_ascii=False))
             time.sleep(5)
 
@@ -347,7 +347,6 @@ def get_session(session):
     else:
         session['count_members_maximum'] = config.count_members_maximum
 
-
     # Составляем список запрещенных ID групп, удаляем у них минус
     session['rpg_black_ids'] = []
     for i in config.RPG_BLACK_IDS:
@@ -379,9 +378,12 @@ def get_session(session):
     else:
         session['name_group'] = session['vk_app'].groups.getById(group_ids=session['from_group'],
                                                                  fields='description')[0]['name']
+    session['name_group'] = re.sub(r"\W", ' ', session['name_group'], 0, re.M | re.I)
+    session['name_group'] = re.sub(r'\s+', ' ', session['name_group'], 0, re.M)
+    session['name_group'] = re.sub(r'^\s+|\s+$', '', session['name_group'], 0, re.M)
 
     # Название файла отчета (можно изменить)
-    session['name_file'] = f"Реклама {session['name_group']} от " \
+    session['name_file'] = f"base/Реклама {session['name_group']} от " \
                            f"{str(session['current_date'])}-{str(session['current_time'].hour)}" \
                            f"-{str(session['current_time'].minute)}.html"
 
@@ -391,14 +393,9 @@ def get_session(session):
     for i in list_key_words:
         session['rpg_words'][i] = 0
 
-    session['settings_session_name'] = ''.join(list_key_words)
-
-    session['name_file_false_groups_id_by_count_members'] = \
-        f"{session['settings_session_name']}_{session['count_members_minimum']}_" \
-        f"{session['count_members_maximum']}_false_groups_id.json"
-    session['name_file_true_groups_id_by_count_members'] = \
-        f"{session['settings_session_name']}_{session['count_members_minimum']}_" \
-        f"{session['count_members_maximum']}_true_groups_id.json"
+    session['name_file_region_base'] = f"base/{''.join(list_key_words)}" \
+                                       f"_{session['count_members_minimum']}_" \
+                                       f"{session['count_members_maximum']}.json"
 
     return session
 
@@ -424,12 +421,13 @@ def checking_token_limit(session):
     while True:
         if not session['shut_token']:
             session['token'] = session['tokens'][0][1]
+
             try:
-                with open(os.path.join(f"{session['tokens'][0][0]}_shut_token.json"), 'r', encoding='utf-8') as f:
+                with open(os.path.join(f"base/{session['tokens'][0][0]}_shut_token.json"), 'r', encoding='utf-8') as f:
                     session['shut_token'] = json.load(f)
             except:
                 session['shut_token'] = [1643164102]  # Старая дата где-то из 2022 года
-                with open(os.path.join(f"{session['tokens'][0][0]}_shut_token.json"), 'w', encoding='utf-8') as f:
+                with open(os.path.join(f"base/{session['tokens'][0][0]}_shut_token.json"), 'w', encoding='utf-8') as f:
                     f.write(json.dumps(session['shut_token'], indent=2, ensure_ascii=False))
             # Подключаемся к API VK
             session = get_session_vk_api(session)
