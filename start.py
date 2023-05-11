@@ -63,14 +63,21 @@ def get_reklama_post(session):
     reklama_posts = session['vk_app'].wall.get(owner_id=session['from_group'], count=100, offset=0)['items']
 
     # Находим нужный нам пост по его ID
-    sample = {}
     for sample in reklama_posts:
         if sample['id'] == session['post_id']:
-            if session['from_group'] < 0:
-                session['from_group'] = -session['from_group']
-            session['reklama_text'] = f"{sample['text']}\n\nПодпишись " \
-                                      f"на @https://vk.com/public{session['from_group']} ({session['name_group']}), " \
-                                      f"чтобы ничего не пропустить."
+            # Берем первый чистый текст
+            if config.url_reklama:
+                session['list_reklama_text'] = [
+                    f"{sample['text']}\n\nВ нашем сообществе @https://vk.com/public{abs(session['from_group'])} (\"{session['name_group']}\") есть еще."]
+            else:
+                session['list_reklama_text'].append(sample['text'])
+            # Набираем следующие тексты с измененными буквами на латиницу
+            for i in range(0, len(config.letter_sub[0])-1):
+                if config.url_reklama:
+                    session['list_reklama_text'].append(
+                        f"{re.sub(config.letter_sub[0][i], config.letter_sub[1][i], sample['text'], 0, re.M)}\n\nВ нашем сообществе @https://vk.com/public{abs(session['from_group'])} (\"{session['name_group']}\") есть еще.")
+                else:
+                    session['list_reklama_text'].append(f"{re.sub(config.letter_sub[0][i], config.letter_sub[1][i], sample['text'], 0, re.M)}")
             session['reklama_attachments'] = get_attach(sample)
             return session
 
@@ -91,12 +98,12 @@ def get_sort_groups(session):
         with open(os.path.join(session['name_file_region_base']), 'r', encoding='utf-8') as f:
             session['region_base'] = json.load(f)
     except:
-        session['region_base'] = {"false_groups_id_by_count_members": [0], "true_groups_id": [28534711],
+        session['region_base'] = {"false_groups_id_by_count_members": [0], "true_groups_id": [167381590],
                                   "rpg_words": session['rpg_words']}
         with open(os.path.join(session['name_file_region_base']), 'w', encoding='utf-8') as f:
             f.write(json.dumps(session['region_base'], indent=2, ensure_ascii=False))
 
-    session['region_base']['true_groups_id'].append(28534711)  # Для страховки от пустого списка
+    session['region_base']['true_groups_id'].append(167381590)  # Для страховки от пустого списка моя группа ПарсерТест
     session['false_groups_id'].append(0)  # Для страховки от пустого списка
     session['rpg_black_ids'].append(0)  # Для страховки от пустого списка
 
@@ -115,34 +122,35 @@ def get_sort_groups(session):
 
 
 def post_in_sort_groups(session):
+    shuffle(session['region_base']['true_groups_id'])
+
     for true_group_id in session['region_base']['true_groups_id']:
 
         session = checking_token_limit(session)
         if not session:
             return
 
-        try:
-            if true_group_id > 0:
-                true_group_id = -true_group_id
+        session['count_rek_posts'] += 1
+        if session['count_rek_posts'] == len(session['list_reklama_text']):
+            session['count_rek_posts'] = 0
 
-            session['vk_app'].wall.post(owner_id=true_group_id,
+        try:
+            session['vk_app'].wall.post(owner_id=-abs(true_group_id),
                                         from_group=0,
-                                        message=session['reklama_text'],
+                                        message=session['list_reklama_text'][session['count_rek_posts']],
                                         attachments=session['reklama_attachments'])
 
             time.sleep(1)
             # Получаем количество подписчиков в группе
-            if true_group_id < 0:
-                true_group_id = -true_group_id
-            count_members = session['vk_app'].groups.getMembers(group_id=true_group_id)['count']
+            count_members = session['vk_app'].groups.getMembers(group_id=abs(true_group_id))['count']
 
             session['count_all_members'] += count_members
 
             session['list_url'] += \
-                f"""<a href="https://vk.com/public{true_group_id}">https://vk.com/public{true_group_id} - {count_members} подписчиков</a><br />"""
+                f"""<a href="https://vk.com/public{abs(true_group_id)}">https://vk.com/public{abs(true_group_id)} - {count_members} подписчиков</a><br />"""
 
             print(
-                f"https://vk.com/public{true_group_id} - {count_members} подписчиков. "
+                f"https://vk.com/public{abs(true_group_id)} - {count_members} подписчиков. "
                 f"Всего - {session['count_all_members']}")
 
             session['count_up'] += 1
@@ -169,7 +177,7 @@ def post_in_sort_groups(session):
                 save_result(session)
                 return
             session['count_down'] += 1
-            session['false_groups_id'].append(true_group_id)
+            session['false_groups_id'].append(abs(true_group_id))
             with open(os.path.join("base/false_groups_id.json"), 'w', encoding='utf-8') as f:
                 f.write(json.dumps(session['false_groups_id'], indent=2, ensure_ascii=False))
             time.sleep(5)
@@ -207,9 +215,6 @@ def post_in_new_groups(session):
         if not session:
             return
 
-        if group['id'] < 0:
-            group['id'] = -group['id']
-
         # Черный список групп куда постить ненужно
         if group['id'] in session['false_groups_id']:
             session['count_down'] += 1
@@ -219,29 +224,29 @@ def post_in_new_groups(session):
             continue
 
         if 'can_post' in group and group['can_post'] == 0:
-            session['false_groups_id'].append(group['id'])
+            session['false_groups_id'].append(abs(group['id']))
             session['count_down'] += 1
             continue
         if 'wall' in group and group['wall'] != 1:
-            session['false_groups_id'].append(group['id'])
+            session['false_groups_id'].append(abs(group['id']))
             session['count_down'] += 1
             continue
         try:
             if group['is_closed'] != 0 or group['is_advertiser'] == 1 or 'deactivated' in group:
-                session['false_groups_id'].append(group['id'])
+                session['false_groups_id'].append(abs(group['id']))
                 session['count_down'] += 1
                 continue
         except Exception as ext:
-            session['false_groups_id'].append(group['id'])
+            session['false_groups_id'].append(abs(group['id']))
             session['count_down'] += 1
             print(f"Непонятная ситуация с ключами, пропускаем группу. Ошибка вот: {ext}")
             continue
 
         try:
-            members = session['vk_app'].groups.getMembers(group_id=group['id'])
+            members = session['vk_app'].groups.getMembers(group_id=abs(group['id']))
             if members['count'] > session['count_members_maximum'] or members['count'] < session[
                 'count_members_minimum']:
-                session['region_base']['false_groups_id_by_count_members'].append(group['id'])
+                session['region_base']['false_groups_id_by_count_members'].append(abs(group['id']))
                 with open(os.path.join(session['name_file_region_base']), 'w',
                           encoding='utf-8') as f:
                     f.write(json.dumps(session['region_base'], indent=2, ensure_ascii=False))
@@ -249,7 +254,7 @@ def post_in_new_groups(session):
                 continue
         except Exception as ext:
             print(ext)
-            session['false_groups_id'].append(group['id'])
+            session['false_groups_id'].append(abs(group['id']))
             session['count_down'] += 1
             continue
 
@@ -257,10 +262,14 @@ def post_in_new_groups(session):
         with open(os.path.join("base/false_groups_id.json"), 'w', encoding='utf-8') as f:
             f.write(json.dumps(session['false_groups_id'], indent=2, ensure_ascii=False))
 
+        session['count_rek_posts'] += 1
+        if session['count_rek_posts'] == len(session['list_reklama_text']):
+            session['count_rek_posts'] = 0
+
         try:
-            session['vk_app'].wall.post(owner_id=-group['id'],
+            session['vk_app'].wall.post(owner_id=-abs(group['id']),
                                         from_group=0,
-                                        message=session['reklama_text'],
+                                        message=session['list_reklama_text'][session['count_rek_posts']],
                                         attachments=session['reklama_attachments'])
 
             time.sleep(1)
@@ -271,7 +280,7 @@ def post_in_new_groups(session):
             print(
                 f"{group['screen_name']} - {members['count']} подписчиков. Всего - {session['count_all_members']}")
 
-            session['region_base']['true_groups_id'].append(group['id'])
+            session['region_base']['true_groups_id'].append(abs(group['id']))
             with open(os.path.join(session['name_file_region_base']), 'w',
                       encoding='utf-8') as f:
                 f.write(json.dumps(session['region_base'], indent=2, ensure_ascii=False))
@@ -302,7 +311,7 @@ def post_in_new_groups(session):
                 save_result(session)
                 return
 
-            session['false_groups_id'].append(group['id'])
+            session['false_groups_id'].append(abs(group['id']))
             with open(os.path.join("base/false_groups_id.json"), 'w', encoding='utf-8') as f:
                 f.write(json.dumps(session['false_groups_id'], indent=2, ensure_ascii=False))
             time.sleep(5)
@@ -350,11 +359,11 @@ def get_session(session):
     # Составляем список запрещенных ID групп, удаляем у них минус
     session['rpg_black_ids'] = []
     for i in config.RPG_BLACK_IDS:
-        if i < 0:
-            session['rpg_black_ids'].append(-i)
-        session['rpg_black_ids'].append(i)
+        session['rpg_black_ids'].append(abs(i))
 
     # Выставляем счетчики и накопители (настраивать ненужно)
+    session['count_rek_posts'] = 0
+    session['list_reklama_text'] = []
     session['count_up'] = 0
     session['count_down'] = 0
     session['count_all_members'] = 0
@@ -372,11 +381,7 @@ def get_session(session):
     session['current_time'] = datetime.now().time()
 
     # Получаем название рекламируемой группы
-    if session['from_group'] < 0:
-        session['name_group'] = session['vk_app'].groups.getById(group_ids=-session['from_group'],
-                                                                 fields='description')[0]['name']
-    else:
-        session['name_group'] = session['vk_app'].groups.getById(group_ids=session['from_group'],
+    session['name_group'] = session['vk_app'].groups.getById(group_ids=abs(session['from_group']),
                                                                  fields='description')[0]['name']
     session['name_group'] = re.sub(r"\W", ' ', session['name_group'], 0, re.M | re.I)
     session['name_group'] = re.sub(r'\s+', ' ', session['name_group'], 0, re.M)
@@ -432,7 +437,7 @@ def checking_token_limit(session):
             # Подключаемся к API VK
             session = get_session_vk_api(session)
 
-        limit = 80
+        limit = 85
         curr_dt = datetime.now()
         time_day_ago = int(round(curr_dt.timestamp())) - 90000
         for i in session['shut_token']:

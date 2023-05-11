@@ -6,7 +6,7 @@ import config
 
 
 def check_token_limit(name_token):
-    with open(os.path.join(f"{name_token}_shut_token.json"), 'r', encoding='utf-8') as f:
+    with open(os.path.join(f"base/{name_token}_shut_token.json"), 'r', encoding='utf-8') as f:
         shut_token = json.load(f)
 
     limit = 80
