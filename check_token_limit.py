@@ -9,7 +9,7 @@ def check_token_limit(name_token):
     with open(os.path.join(f"base/{name_token}_shut_token.json"), 'r', encoding='utf-8') as f:
         shut_token = json.load(f)
 
-    limit = 80
+    limit = 60  # Последний лимит знаю что 80 был
     curr_dt = datetime.now()
     time_day_ago = int(round(curr_dt.timestamp())) - 90000
     for i in shut_token:

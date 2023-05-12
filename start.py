@@ -20,9 +20,12 @@ def save_result(session):
             <title>Title</title>
             </head>
             <body>
-            <h2>Список ключевых слов поиска и количество найденных по ним групп:</h2>
+            <h2>Адрес рекламируемого поста: {config.URL_REKLAMA_POST}</h2>
+            <h2>Список ключевых слов поиска:</h2>
             <p>{session['rpg_words']}</p>
-            <p>Всего найдено - {session['all_found_groups']} групп подходящих под Ваш запрос.</p>
+            <p>Подпись-ссылка в группу: {config.url_reklama}, сделать {config.count_post_up_max} разммещений,</p>
+            <p>Подписоты в группе: Мин - {config.count_members_minimum}, Макс - {config.count_members_maximum}, Всего - {config.count_members_up_max}</p>
+            <h2>Всего найдено: {session['all_found_groups']} групп.</h2>
             <p>Обработано {session['count_up'] + session['count_down']} групп</p>
             <p>Успешно размещено {session['count_up']} объявлений для {session['count_all_members']} подписчиков.</p>
             <p>{session['count_down']} групп отсеяно за негодностью.</p>
@@ -437,7 +440,7 @@ def checking_token_limit(session):
             # Подключаемся к API VK
             session = get_session_vk_api(session)
 
-        limit = 85
+        limit = 60  # Последний лимит знаю что 80 был
         curr_dt = datetime.now()
         time_day_ago = int(round(curr_dt.timestamp())) - 90000
         for i in session['shut_token']:
