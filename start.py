@@ -20,10 +20,10 @@ def save_result(session):
             <title>Title</title>
             </head>
             <body>
-            <h2>Адрес рекламируемого поста: {config.URL_REKLAMA_POST}</h2>
+            <h2>Адрес рекламируемого поста: <a href="{config.URL_REKLAMA_POST}">{config.URL_REKLAMA_POST}</a></h2>
             <h2>Список ключевых слов поиска:</h2>
             <p>{session['rpg_words']}</p>
-            <p>Подпись-ссылка в группу: {config.url_reklama}, сделать {config.count_post_up_max} разммещений,</p>
+            <p>Подпись-ссылка в группу: {config.url_reklama}. Сделать {config.count_post_up_max} размещений.</p>
             <p>Подписоты в группе: Мин - {config.count_members_minimum}, Макс - {config.count_members_maximum}, Всего - {config.count_members_up_max}</p>
             <h2>Всего найдено: {session['all_found_groups']} групп.</h2>
             <p>Обработано {session['count_up'] + session['count_down']} групп</p>
