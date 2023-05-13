@@ -68,20 +68,21 @@ def get_reklama_post(session):
     # Находим нужный нам пост по его ID
     for sample in reklama_posts:
         if sample['id'] == session['post_id']:
-            # Берем первый чистый текст
+
+            # Забираем картинки
+            session['reklama_attachments'] = get_attach(sample)
+
+            # Если нужна подпись под текстом, добавляем её
             if config.url_reklama:
-                session['list_reklama_text'] = [
-                    f"{sample['text']}\n\nВ нашем сообществе @https://vk.com/public{abs(session['from_group'])} (\"{session['name_group']}\") есть еще."]
-            else:
-                session['list_reklama_text'].append(sample['text'])
+                sample['text'] = f"{sample['text']}\n\n{config.signature_after} @https://vk.com/public{abs(session['from_group'])} (\"{session['name_group']}\") {config.signature_before}."
+
+            # Берем первый чистый текст в список текстов
+            session['list_reklama_text'].append(sample['text'])
+
             # Набираем следующие тексты с измененными буквами на латиницу
             for i in range(0, len(config.letter_sub[0])-1):
-                if config.url_reklama:
-                    session['list_reklama_text'].append(
-                        f"{re.sub(config.letter_sub[0][i], config.letter_sub[1][i], sample['text'], 0, re.M)}\n\nВ нашем сообществе @https://vk.com/public{abs(session['from_group'])} (\"{session['name_group']}\") есть еще.")
-                else:
-                    session['list_reklama_text'].append(f"{re.sub(config.letter_sub[0][i], config.letter_sub[1][i], sample['text'], 0, re.M)}")
-            session['reklama_attachments'] = get_attach(sample)
+                session['list_reklama_text'].append(f"{re.sub(config.letter_sub[0][i], config.letter_sub[1][i], sample['text'], 0, re.M)}")
+
             return session
 
 
