@@ -20,22 +20,20 @@ def save_result(session):
             <title>Title</title>
             </head>
             <body>
+            <h2>Кого или что рекламируем: {config.name_reklama}</h2>
             <h2>Адрес рекламируемого поста: <a href="{config.URL_REKLAMA_POST}">{config.URL_REKLAMA_POST}</a></h2>
-            <h2>Список ключевых слов поиска:</h2>
-            <p>{session['rpg_words']}</p>
-            <p>Подпись-ссылка в группу: {config.url_reklama}. Сделать {config.count_post_up_max} размещений.</p>
-            <p>Подписоты в группе: Мин - {config.count_members_minimum}, Макс - {config.count_members_maximum}, Всего - {config.count_members_up_max}</p>
-            <h2>Всего найдено: {session['all_found_groups']} групп.</h2>
-            <p>Обработано {session['count_up'] + session['count_down']} групп</p>
-            <p>Успешно размещено {session['count_up']} объявлений для {session['count_all_members']} подписчиков.</p>
-            <p>{session['count_down']} групп отсеяно за негодностью.</p>
-            <p></p>
+            Список ключевых слов поиска:<br />
+            {session['rpg_words']}<br />
+            Подпись-ссылка в группу: {config.url_reklama}. Сделать {config.count_post_up_max} размещений.<br />
+            Диапазон количества подписчиков в группе:<br />
+            Мин - {config.count_members_minimum}, Макс - {config.count_members_maximum}, Всего - {config.count_members_up_max}<br />
+            <h2>Всего найдено: {session['all_found_groups']} групп.<br />
+            Обработано {session['count_up'] + session['count_down']} групп<br />
+            Успешно размещено {session['count_up']} объявлений для {session['count_all_members']} подписчиков.<br />
+            {session['count_down']} групп отсеяно за негодностью.<br />
             <h2>Список ссылок на группы в которые удалось разместить объявление:</h2>
-            <p></p>
             <p>{session['list_url']}</p>
-            <p></p>            
-            <p></p>            
-            <p></p>            
+            <br /> <br /> <br /> <br />       
             </body>
             </html>
             """
