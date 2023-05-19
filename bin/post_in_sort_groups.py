@@ -1,16 +1,16 @@
-import json
-import os
 import random
 import time
 from datetime import datetime
 
-from bin.checking_token_limit import checking_token_limit
+import config
+from bin.get_work_limit_token import get_work_limit_token
 from bin.save_result import save_result
 
 
 def post_in_sort_groups(session):
     unique_members = []
     dubl_group = []
+    count_shuts_token = 0
 
     for group in session['base']:
 
@@ -19,14 +19,16 @@ def post_in_sort_groups(session):
             continue
         dubl_group.append(true_group_id)
 
-        if true_group_id in session['main_black_ids'] or true_group_id in session['update_black_ids']:
-            session['count_down'] += 1
+        if group[1] < config.count_members_minimum:
             continue
 
-        session = checking_token_limit(session)
-        if not session['tokens']:
-            print("Кончились токены, сорян...")
-            break
+        if true_group_id in session['main_black_ids'] or true_group_id in session['update_black_ids']:
+            continue
+
+        if count_shuts_token < 1:
+            session, count_shuts_token = get_work_limit_token(session)
+            if count_shuts_token < 1:
+                break
 
         session['count_rek_posts'] += 1
         if session['count_rek_posts'] == len(session['list_reklama_text']):
@@ -50,20 +52,26 @@ def post_in_sort_groups(session):
             if "Too many recipients" in str(ext):
                 print(ext)
                 break
-            if "user should be group editor" in str(ext) or "Access denied" in str(ext):
-                session['update_black_ids'].append(true_group_id)
+            print(f"Ошибка - {ext}. Добавил группу {true_group_id} в программный черный список.")
+            session['update_black_ids'].append(true_group_id)
             session['count_down'] += 1
 
         print(f"https://vk.com/public{true_group_id} - {group[1]} подписчиков. Всего - {session['count_all_members']}")
         save_result(session)
-        curr_dt = datetime.now()
-        session['shut_token'].append(int(round(curr_dt.timestamp())))
-        if len(session['shut_token']) > 100:
-            del session['shut_token'][0]
 
-        if session['count_up'] > session['count_post_up_max'] or \
+        curr_dt = datetime.now()
+        if session['name_work_token'] not in session['tokens_shuts']:
+            session['tokens_shuts'][session['name_work_token']] = []
+        session['tokens_shuts'][session['name_work_token']].append(int(round(curr_dt.timestamp())))
+        if len(session['tokens_shuts'][session['name_work_token']]) > 100:
+            del session['tokens_shuts'][session['name_work_token']][0]
+        count_shuts_token -= 1
+
+        if session['count_up'] > config.count_post_up_max or \
                 session['count_all_members'] > session['count_members_up_max']:
             save_result(session)
             break
 
         time.sleep(random.randint(2, 7))
+
+    return session

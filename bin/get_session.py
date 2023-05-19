@@ -1,24 +1,39 @@
-import re
-from datetime import datetime
 import json
 import os
+import random
+import re
+from datetime import datetime
 
 import config
+from bin.get_session_vk_api import get_session_vk_api
+from bin.load_base_tokens import load_base_tokens
 
 
-def get_session(session):
+def get_session():
+
+    session = dict()
+
     # Пользовательские настройки (из файла config.py)
     session['url_reklama_post'] = config.URL_REKLAMA_POST
-    session['count_post_up_max'] = config.count_post_up_max
+
     if config.count_members_up_max == 0:
         session['count_members_up_max'] = 1234567890
     else:
         session['count_members_up_max'] = config.count_members_up_max
-    session['count_members_minimum'] = config.count_members_minimum
+
     if config.count_members_maximum == 0:
         session['count_members_maximum'] = 1234567890
     else:
         session['count_members_maximum'] = config.count_members_maximum
+
+    # Загружаем базу токенов с попытками
+    session = load_base_tokens(session)
+
+    # Выбираем имя токена для соединения с ВК
+    session['name_work_token'] = random.choice(session['karusel_tokens'])
+
+    # Подсоединяемся к ВК
+    session = get_session_vk_api(session)
 
     # Загружаем список вручную запрещенных ID групп
     try:
