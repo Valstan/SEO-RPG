@@ -16,12 +16,12 @@ def get_session():
     session['url_reklama_post'] = config.URL_REKLAMA_POST
 
     if config.count_members_up_max == 0:
-        session['count_members_up_max'] = 1234567890
+        session['count_members_up_max'] = 99999999
     else:
         session['count_members_up_max'] = config.count_members_up_max
 
     if config.count_members_maximum == 0:
-        session['count_members_maximum'] = 1234567890
+        session['count_members_maximum'] = 99999999
     else:
         session['count_members_maximum'] = config.count_members_maximum
 

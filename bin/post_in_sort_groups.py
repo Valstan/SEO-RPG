@@ -9,21 +9,11 @@ from bin.save_result import save_result
 
 def post_in_sort_groups(session):
     unique_members = []
-    dubl_group = []
     count_shuts_token = 0
 
     for group in session['base']:
 
         true_group_id = abs(int(group[0]))
-        if true_group_id in dubl_group:
-            continue
-        dubl_group.append(true_group_id)
-
-        if group[1] < config.count_members_minimum:
-            continue
-
-        if true_group_id in session['main_black_ids'] or true_group_id in session['update_black_ids']:
-            continue
 
         if count_shuts_token < 1:
             session, count_shuts_token = get_work_limit_token(session)
