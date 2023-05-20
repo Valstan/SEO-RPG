@@ -30,4 +30,5 @@ def get_work_limit_token(session):
         else:
             pass
 
+    print("Все токены исчерпали свои попытки на сегодня!")
     return session, 0

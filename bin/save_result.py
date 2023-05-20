@@ -12,10 +12,10 @@ def save_result(session):
             <title>Title</title>
             </head>
             <body>
-            <h2>Кого или что рекламируем: {config.name_reklama}</h2>
-            <h2>Адрес рекламируемого поста: <a href="{config.URL_REKLAMA_POST}">{config.URL_REKLAMA_POST}</a></h2>
-            Список ключевых слов поиска:<br />
-            {session['list_key_words']}<br />
+            <h2>Дата: {session['data_work']}. Имя группы: {session['name_group']}.<br />
+            Адрес: <a href="{config.URL_REKLAMA_POST}">{config.URL_REKLAMA_POST}</a></h2>
+            Текст поста: "{session['text_post']}"<br />
+            Список ключевых слов поиска: {str(session['list_key_words'])}<br />
             Подпись-ссылка в группу: {config.url_reklama}. Сделать {config.count_post_up_max} размещений.<br />
             Диапазон количества подписчиков в группе:<br />
             Мин - {config.count_members_minimum}, Макс - {config.count_members_maximum}, Всего - {config.count_members_up_max}<br />

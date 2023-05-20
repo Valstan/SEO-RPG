@@ -12,6 +12,9 @@ def get_reklama_post(session):
     for sample in reklama_posts:
         if sample['id'] == session['post_id']:
 
+            # Забираем текст поста для отчета
+            session['text_post'] = sample['text'][:100]
+
             # Забираем картинки
             session['reklama_attachments'] = get_attach(sample)
 

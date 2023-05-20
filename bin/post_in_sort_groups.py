@@ -48,15 +48,16 @@ def post_in_sort_groups(session):
 
             session['count_up'] += 1
 
+            print(f"Разместил в {true_group_id} - {group[1]} подписчиков. Всего - {session['count_all_members']}")
+
         except Exception as ext:
             if "Too many recipients" in str(ext):
                 print(ext)
                 break
-            print(f"Ошибка - {ext}. Добавил группу {true_group_id} в программный черный список.")
+            print(f"Ошибка - {ext}. Забанил {true_group_id} - {group[1]} подписоты.")
             session['update_black_ids'].append(true_group_id)
             session['count_down'] += 1
 
-        print(f"https://vk.com/public{true_group_id} - {group[1]} подписчиков. Всего - {session['count_all_members']}")
         save_result(session)
 
         curr_dt = datetime.now()
