@@ -7,14 +7,13 @@ from datetime import datetime
 import config
 from bin.get_session_vk_api import get_session_vk_api
 from bin.load_base_tokens import load_base_tokens
+from bin.load_bases import load_bases
 
 
 def get_session():
     session = dict()
 
     # Пользовательские настройки (из файла config.py)
-    session['url_reklama_post'] = config.URL_REKLAMA_POST
-
     if config.count_members_up_max == 0:
         session['count_members_up_max'] = 99999999
     else:
@@ -32,22 +31,10 @@ def get_session():
     session['name_work_token'] = random.choice(session['karusel_tokens'])
 
     # Подсоединяемся к ВК
-    session = get_session_vk_api(session)
+    session = get_session_vk_api(session, vkapp=True)
 
-    # Загружаем список вручную запрещенных ID групп
-    try:
-        with open(os.path.join("base/main_black_ids.json"), 'r', encoding='utf-8') as f:
-            session['main_black_ids'] = json.load(f)
-    except:
-        session['main_black_ids'] = [0]
-
-    # Загружаем программный список запрещенных ID групп (их нужно раз в три месяца вычищать или сделать
-    # фиксированный размер списка и удалять старые при переполнении)
-    try:
-        with open(os.path.join("base/update_black_ids.json"), 'r', encoding='utf-8') as f:
-            session['update_black_ids'] = json.load(f)
-    except:
-        session['update_black_ids'] = [0]
+    # Загружаем базы белых и черных списков ID
+    session['base_ids'], session['main_black_ids'], session['update_black_ids'] = load_bases()
 
     # Выставляем счетчики и накопители (настраивать ненужно)
     session['count_rek_posts'] = 0

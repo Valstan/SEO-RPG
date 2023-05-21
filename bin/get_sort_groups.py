@@ -11,15 +11,12 @@ def get_sort_groups(session):
     dubl_group = []
     unique_members = []
 
-    for keyword_namefile in session['list_key_words']:
-        try:
-            with open(os.path.join(f"base/{keyword_namefile}_база_id.json"), 'r', encoding='utf-8') as f:
-                base += json.load(f)
-
-        except:
-            print(f"По ключевому слову поиска - '{keyword_namefile}'"
+    for keyword in session['list_key_words']:
+        if keyword not in session['base_ids']:
+            print(f"По ключевому слову поиска - '{keyword}'"
                   f" нет базы данных ID групп, сначала создай ее скриптом update_groups_base_by_keys.py")
             quit()
+        base += session['base_ids'][keyword]
 
     # Перемешиваем список ID или наоборот сортируем от самой большой группы к маленькой
     if config.group_shuffle:

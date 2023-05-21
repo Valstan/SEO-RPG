@@ -10,7 +10,7 @@ except:
 while True:
 
     black_id = (abs(int(input("Введите ID группы для занесения в черный список: "))))
-    if black_id == 0:
+    if not black_id:
         break
     if black_id in main_black_ids:
         print("Данный ID уже есть в базе данных запрещенных ID")
