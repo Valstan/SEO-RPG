@@ -42,7 +42,7 @@ def get_sort_groups(session):
 
         unique_members = list(set(unique_members + group[2]))
 
-        session['base'] += group
+        session['base'] += [group]
 
     session['all_found_groups'] = len(session['base'])
     session['all_found_members'] = len(unique_members)

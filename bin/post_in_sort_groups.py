@@ -28,7 +28,8 @@ def post_in_sort_groups(session):
             session['vk_app'].wall.post(owner_id=-true_group_id,
                                         from_group=0,
                                         message=session['list_reklama_text'][session['count_rek_posts']],
-                                        attachments=session['reklama_attachments'])
+                                        attachments=session['reklama_attachments'],
+                                        copyright=config.URL_REKLAMA_POST)
 
             unique_members = list(set(unique_members + group[2]))
             session['count_all_members'] = len(unique_members)
