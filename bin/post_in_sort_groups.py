@@ -64,6 +64,6 @@ def post_in_sort_groups(session):
             save_result(session)
             break
 
-        time.sleep(random.randint(2, 7))
+        time.sleep(random.randint(5, 15))
 
     return session

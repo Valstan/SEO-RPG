@@ -22,7 +22,8 @@ def get_sort_groups(session):
     if config.group_shuffle:
         random.shuffle(base)
     else:
-        base = sorted(base, key=lambda item: item[1], reverse=True)
+        # base = sorted(base, key=lambda item: item[1], reverse=True)
+        base.sort(key=lambda x: x[1], reverse=True)
 
     for group in base:
 

@@ -60,6 +60,7 @@ def get_session():
     # Получаем название рекламируемой группы
     session['name_group'] = session['vk_app'].groups.getById(group_ids=abs(session['from_group']),
                                                              fields='description')[0]['name'][:25]
+
     session['name_group'] = re.sub(r"\W", ' ', session['name_group'], 0, re.M | re.I)
     session['name_group'] = re.sub(r'\s+', ' ', session['name_group'], 0, re.M)
     session['name_group'] = re.sub(r'^\s+|\s+$', '', session['name_group'], 0, re.M)
