@@ -6,7 +6,6 @@ from bin.get_session_vk_api import get_session_vk_api
 
 
 def get_work_limit_token(session):
-
     for i in range(100):
 
         # Принудительная смена токена
@@ -18,6 +17,10 @@ def get_work_limit_token(session):
             session['name_work_token'] = random.choice(session['karusel_tokens'])
             if last_name_work_token != session['name_work_token']:
                 break
+
+        # Если у токена нет еще базы попыток, то создаем
+        if session['name_work_token'] not in session['tokens_shuts']:
+            session['tokens_shuts'][session['name_work_token']] = [1685560008]
 
         # Проверяем оставшееся число попыток у нового токена
         work_limit_token = check_one_token_limit(session['tokens_shuts'][session['name_work_token']])
