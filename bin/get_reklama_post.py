@@ -23,26 +23,30 @@ def get_reklama_post(session):
                 sample[
                     'text'] = f"{sample['text']}\n\n{config.signature_after} @https://vk.com/public{abs(session['from_group'])} (\"{session['name_group']}\") {config.signature_before}."
 
-            # Набираем следующие тексты с измененными буквами на латиницу
-            count_post = 0
-            for i in range(len(config.letter_sub[0])):
-                session['list_reklama_text'].append(
-                    f"{re.sub(config.letter_sub[0][i], config.letter_sub[1][i], sample['text'], 0, re.M)}")
-                count_post += 1
-                if count_post > config.count_post_up_max:
-                    return session
-            for count in range(len(config.letter_sub[0])):
-                texts = session['list_reklama_text']
-                config.letter_sub[0].append(config.letter_sub[0][0])
-                del config.letter_sub[0][0]
-                config.letter_sub[1].append(config.letter_sub[1][0])
-                del config.letter_sub[1][0]
-                for i in range(len(config.letter_sub[0])):
-                    for text in texts:
-                        session['list_reklama_text'].append(
-                            f"{re.sub(config.letter_sub[0][i], config.letter_sub[1][i], text, 0, re.M)}")
-                        count_post += 1
-                        if count_post > config.count_post_up_max:
-                            return session
+            # Забираем один чистый текст
+            session['list_reklama_text'].append(sample['text'])
+
+            # Если нужно, то набираем следующие тексты с измененными буквами на латиницу
+            if session['letter_sub']:
+                count_post = 0
+                for i in range(len(session['letter_sub'][0])):
+                    session['list_reklama_text'].append(
+                        f"{re.sub(session['letter_sub'][0][i], session['letter_sub'][1][i], sample['text'], 0, re.M)}")
+                    count_post += 1
+                    if count_post > config.count_post_up_max:
+                        return session
+                for count in range(len(session['letter_sub'][0])):
+                    texts = session['list_reklama_text']
+                    session['letter_sub'][0].append(session['letter_sub'][0][0])
+                    del session['letter_sub'][0][0]
+                    session['letter_sub'][1].append(session['letter_sub'][1][0])
+                    del session['letter_sub'][1][0]
+                    for i in range(len(session['letter_sub'][0])):
+                        for text in texts:
+                            session['list_reklama_text'].append(
+                                f"{re.sub(session['letter_sub'][0][i], session['letter_sub'][1][i], text, 0, re.M)}")
+                            count_post += 1
+                            if count_post > config.count_post_up_max:
+                                return session
 
             return session

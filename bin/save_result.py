@@ -21,5 +21,6 @@ def save_result(session):
 <h3>Список ссылок на группы в которых удалось разместить объявление:</h3>
 <h3>{session['list_url']}</h3><br /> <br /> <br /> <br /></body></html>"""
 
-    with open(os.path.join(session['name_file']), 'w', encoding='utf-8') as f:
-        f.write(result)
+    if session['manual']:
+        with open(os.path.join(session['name_file']), 'w', encoding='utf-8') as f:
+            f.write(result)

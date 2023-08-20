@@ -2,7 +2,7 @@
 /.idea/
 /vk_config.v2.json
 /.pytest_cache/
-/config.py
 /.editorconfig
 /base/
 /primer.py
+/my_mongo.py

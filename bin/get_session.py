@@ -1,5 +1,3 @@
-import json
-import os
 import random
 import re
 from datetime import datetime
@@ -12,6 +10,9 @@ from bin.load_bases import load_bases
 
 def get_session():
     session = dict()
+
+    # Говорим что скрипт работает в режиме ручного запуска
+    session['manual'] = True
 
     # Пользовательские настройки (из файла config.py)
     if config.count_members_up_max == 0:
