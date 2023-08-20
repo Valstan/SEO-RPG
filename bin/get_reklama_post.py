@@ -2,6 +2,7 @@ import re
 
 import config
 from bin.get_attach import get_attach
+from bin.get_mongo import table
 
 
 def get_reklama_post(session):
@@ -26,8 +27,9 @@ def get_reklama_post(session):
             # Забираем один чистый текст
             session['list_reklama_text'].append(sample['text'])
 
-            # Если нужно, то набираем следующие тексты с измененными буквами на латиницу
-            if session['letter_sub']:
+            # Если ручной запуск и если надо, то набираем следующие тексты с измененными буквами на латиницу
+            if session['manual'] and config.letter_sub:
+                session['letter_sub'] = table['letter_sub']
                 count_post = 0
                 for i in range(len(session['letter_sub'][0])):
                     session['list_reklama_text'].append(

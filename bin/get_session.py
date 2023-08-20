@@ -8,19 +8,15 @@ from bin.load_base_tokens import load_base_tokens
 from bin.load_bases import load_bases
 
 
-def get_session():
-    session = dict()
-
-    # Говорим что скрипт работает в режиме ручного запуска
-    session['manual'] = True
+def get_session(session):
 
     # Пользовательские настройки (из файла config.py)
-    if config.count_members_up_max == 0:
+    if not session['manual'] or config.count_members_up_max == 0:
         session['count_members_up_max'] = 99999999
     else:
         session['count_members_up_max'] = config.count_members_up_max
 
-    if config.count_members_maximum == 0:
+    if not session['manual'] or config.count_members_maximum == 0:
         session['count_members_maximum'] = 99999999
     else:
         session['count_members_maximum'] = config.count_members_maximum
@@ -34,7 +30,7 @@ def get_session():
     # Подсоединяемся к ВК
     session = get_session_vk_api(session, vkapp=True)
 
-    # Загружаем базы белых и черных списков ID
+    # Загружаем базы белых и черных списков ID !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     session['base_ids'], session['main_black_ids'], session['update_black_ids'] = load_bases()
 
     # Выставляем счетчики и накопители (настраивать ненужно)

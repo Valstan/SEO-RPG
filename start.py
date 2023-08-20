@@ -9,17 +9,17 @@ from bin.post_in_sort_groups import post_in_sort_groups
 from bin.save_mongo import save_mongo
 from check_limit_all_tokens import check_limit_all_tokens
 
-session = get_session()
+session = dict()
+
 # Имя аккаунта владельца токена и сам токен аккаунта Вконтакте (пишутся внутри кавычек)
-TOKENS = table['TOKENS']
+session['TOKENS'] = table['TOKENS']
 # Токен доступа к вашему Яндекс-диску (если есть) для сохранения работы программы на Яндекс-Диск
 YANDEX_DISK_TOKEN = table['YANDEX_DISK_TOKEN']
-if config.letter_sub:
-    session['letter_sub'] = table['letter_sub']
 
 if len(argv) == 2:
     # Включаем автоматический режим. Скрипт работает на сервере.
-    session['manual'] = False
+    session['server'] = True
+    session = get_session(session)
     # Отключаем перемешивание букв в текстах
     session['letter_sub'] = False
     pass
